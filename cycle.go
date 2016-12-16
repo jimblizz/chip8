@@ -340,7 +340,7 @@ func (c* Chip8) Cycle () (error) {
 SKIPADVANCE:
 
     if draw {
-        fmt.Print("    DRAW")
+        //c.VideoDriver.draw(c.gfx)
     }
 
     if !opcodesIdentical {

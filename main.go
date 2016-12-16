@@ -11,7 +11,7 @@ import (
 
 const (
     screenWidth     = 64
-    screenHeight    = 64 // 32
+    screenHeight    = 32
 )
 
 var chip8Fontset = [80]byte{
@@ -80,7 +80,7 @@ type Chip8 struct {
 
     gfx []byte              // Graphics memory
 
-    video *video            // Video driver
+    VideoDriver *Video            // Video driver
 }
 
 func NewCpu () *Chip8 {
@@ -91,9 +91,6 @@ func NewCpu () *Chip8 {
 
     // Clear graphics
     c.gfx = make([]byte, screenWidth*screenHeight)
-
-    c.video = new(video)
-    c.video.init()
 
     // Set the fontset on each memory location
     // TODO: This is stolen, why do we need to do this? Cant it all be 0x0?
@@ -125,6 +122,15 @@ func (c* Chip8) Stop () {
 }
 
 func (c* Chip8) Run () error {
+
+    c.VideoDriver = new(Video)
+    go func (c *Chip8) {
+        err := c.VideoDriver.Init(&c.gfx)
+        if err != nil {
+            panic(err)
+        }
+    }(c)
+
     for {
         select {
         case <-c.stop:
@@ -178,9 +184,9 @@ func main() {
             panic(err.Error())
         }
 
-        fmt.Println("--- MEMORY, AFTER ROM LOAD ---")
-        spew.Dump(cpu.Memory)
-        fmt.Println("--- END OF MEMORY, AFTER ROM LOAD ---")
+        //fmt.Println("--- MEMORY, AFTER ROM LOAD ---")
+        //spew.Dump(cpu.Memory)
+        //fmt.Println("--- END OF MEMORY, AFTER ROM LOAD ---")
 
         err = cpu.Run()
         if err != nil {
