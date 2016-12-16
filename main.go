@@ -12,6 +12,7 @@ import (
 const (
     screenWidth     = 64
     screenHeight    = 32
+    cpuFrequency    = 10 // To original was 60hz
 )
 
 var chip8Fontset = [80]byte{
@@ -101,7 +102,7 @@ func NewCpu () *Chip8 {
     // Create the stop channel
     c.stop = make(chan struct{})
 
-    c.Clock = time.Tick(time.Second / time.Duration(60))    // Default of 60hz, 1 tick per second
+    c.Clock = time.Tick(time.Second / time.Duration(cpuFrequency))
 
     return c
 }
@@ -114,8 +115,6 @@ func (c *Chip8) LoadBytes(p []byte) (int, error) {
 func (c *Chip8) load(offset int, r io.Reader) (int, error) {
     return r.Read(c.Memory[offset:])
 }
-
-
 
 func (c* Chip8) Stop () {
     close(c.stop)

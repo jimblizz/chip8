@@ -67,6 +67,9 @@ func (v *Video) Init(gfxMemory *[]byte) error {
     //}
 
     for !v.Window.ShouldClose() {
+        // We could give this its own frequency, but we don't really need too
+        // We're not going for total accuracy
+
         pixels := *gfxMemory
         v.draw(pixels)
         glfw.PollEvents()
@@ -85,9 +88,6 @@ func (v *Video) close() {
 }
 
 func (v *Video) draw(pixels []byte) {
-    // No need to clear the screen since I explicitly redraw all pixels, at
-    // least currently.
-
     gl.MatrixMode(gl.POLYGON)
 
     for yline := 0; yline < screenHeight; yline++ {
