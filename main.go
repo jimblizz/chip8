@@ -34,11 +34,7 @@ var chip8Fontset = [80]byte{
     0xF0, 0x80, 0xF0, 0x80, 0x80, // F
 }
 
-
-
 type Chip8 struct {
-    Opcode uint16           // Current opcode
-
     // The 4096 bytes of memory.
     //
     // Memory Map:
@@ -82,7 +78,9 @@ type Chip8 struct {
 
     TickCount int
 
-    gfx []byte
+    gfx []byte              // Graphics memory
+
+    video *video            // Video driver
 }
 
 func NewCpu () *Chip8 {
@@ -93,6 +91,9 @@ func NewCpu () *Chip8 {
 
     // Clear graphics
     c.gfx = make([]byte, screenWidth*screenHeight)
+
+    c.video = new(video)
+    c.video.init()
 
     // Set the fontset on each memory location
     // TODO: This is stolen, why do we need to do this? Cant it all be 0x0?
@@ -133,7 +134,9 @@ func (c* Chip8) Run () error {
         case <-c.Clock:
             // Every 10 ticks we put in a header
             if c.TickCount == 0 {
-                fmt.Println(fmt.Sprintf("%s     %s     %s", "PC", "Opcode", "Action"))
+                if !opcodesIdentical {
+                    fmt.Println(fmt.Sprintf("%s     %s     %s", "PC", "Opcode", "Action"))
+                }
             }
             if c.TickCount == 10 {
                 c.TickCount = 0

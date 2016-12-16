@@ -42,13 +42,39 @@ import (
 	FX65	Fills V0 to VX with values from memory starting at address I.
 */
 
+var recentOpcodes []uint16
+var opcodesIdentical bool
+var displayedInfiniteLoop bool
+
+func allOpcodesIdentical (opcodes []uint16) bool {
+    for i := 1; i < len(opcodes); i++ {
+        if opcodes[i] != opcodes[0] {
+            return false
+        }
+    }
+    return true
+}
+
 func (c* Chip8) Cycle () (error) {
     // Each opcode is two bytes, so we get two memory locations and increment the PC by 2 each cycle
     op := uint16(c.Memory[c.PC]) << 8 | uint16(c.Memory[c.PC+1])
 
+    // Stop showing opcodes?
+    if len(recentOpcodes) > 3 {
+        // If these opcodes are all identical, we'll turn off debugging but keep the CPU running.
+        // IE this is an infinite loop
+        opcodesIdentical = allOpcodesIdentical(recentOpcodes)
+
+        // Copy over a version with the first entry removed
+        recentOpcodes = recentOpcodes[1:]
+    }
+    recentOpcodes = append(recentOpcodes, op)
+
     draw := false
 
-    fmt.Printf("%X    %X       ", c.PC, op)
+    if !opcodesIdentical {
+        fmt.Printf("%X    %X       ", c.PC, op)
+    }
 
     switch op & 0xF000 { // Get the first char of the op
 
@@ -76,7 +102,15 @@ func (c* Chip8) Cycle () (error) {
 
     case 0x1000:
         // 1NNN	Jumps to address NNN.
-        fmt.Printf("1NNN Jump to %X", op & 0x0FFF)
+
+        if opcodesIdentical {
+            if !displayedInfiniteLoop {
+                fmt.Printf("Infinite loop, supressing messages (HALT?)")
+                displayedInfiniteLoop = true
+            }
+        } else {
+            fmt.Printf("1NNN Jump to %X", op & 0x0FFF)
+        }
 
         c.PC = op & 0x0FFF // Jump to location
         // Mask: 0x0FFF
@@ -210,11 +244,11 @@ func (c* Chip8) Cycle () (error) {
         // Based on the implementation from (stolen from):
         // http://www.multigesture.net
 
-        x := uint16(c.V[( op & 0x0F00 ) >> 8])
-        y := uint16(c.V[( op & 0x00F0 ) >> 4])
+        x := uint16(c.V[(op&0x0F00)>>8])
+        y := uint16(c.V[(op &0x00F0)>>4])
         h := uint16(op & 0x000F) // Height
 
-        fmt.Printf("Draw a sprite %x (from V%X) by %x (from V%X) and to height %X", x, c.V[x], y, c.V[y], h)
+        fmt.Printf("DXYH Draw a sprite %x by %x (Vx by Vy) and to height %X (H)", x, y, h)
 
         var pixel byte
         c.V[0xF] = 0 // TODO: Why?
@@ -306,13 +340,14 @@ func (c* Chip8) Cycle () (error) {
 SKIPADVANCE:
 
     if draw {
-        fmt.Print("     Draw!")
+        fmt.Print("    DRAW")
     }
 
-    fmt.Println("")
+    if !opcodesIdentical {
+        fmt.Println("")
+    }
 
     return nil
-
 
 NOTIMPLEMENTED:
     return fmt.Errorf("%X not implemeted", op & 0xF000, op)
