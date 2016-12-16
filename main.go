@@ -117,22 +117,7 @@ func (c *Chip8) load(offset int, r io.Reader) (int, error) {
     return r.Read(c.Memory[offset:])
 }
 
-func (c* Chip8) Cycle () (error) {
-    // Each opcode is two bytes, so we get two memory locations and increment the PC by 2 each cycle
-    op := uint16(c.Memory[c.PC]) << 8 | uint16(c.Memory[c.PC+1])
 
-    draw := false
-
-    if err := c.Dispatch(c.PC, op, &draw); err != nil {
-        return err
-    }
-
-    if draw {
-        fmt.Println("Draw screen!");
-    }
-
-    return nil
-}
 
 func (c* Chip8) Stop () {
     close(c.stop)
