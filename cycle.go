@@ -2,6 +2,7 @@ package main
 
 import (
     "fmt"
+    "time"
 )
 
 /*
@@ -131,6 +132,19 @@ func (c* Chip8) Cycle () (error) {
         goto SKIPADVANCE
         break
 
+    case 0x3000:
+        // 3XNN	Skips the next instruction if VX equals NN.
+        x := (op & 0x0F00) >> 8
+        nn := byte(op)
+
+        fmt.Printf("3XNN Skip next instruction if V%X == %X", x, nn)
+
+        if c.V[x] == nn {
+            c.PC += 2 // Inc program counter by 2, to be increased again at end of cycle
+        }
+
+        break
+
     case 0x6000:
         // 6XNN	Sets VX to NN
         x := (op & 0x0F00) >> 8
@@ -208,7 +222,7 @@ func (c* Chip8) Cycle () (error) {
             break
 
         case 0x0006:
-            // 8XY6	Shifts VX right by one. VF is set to the value of the least significant bit of VX before the shift.
+            // 8XY6 Shifts VX right by one. VF is set to the value of the least significant bit of VX before the shift.
             goto NOTIMPLEMENTED
             break
 
@@ -317,12 +331,27 @@ func (c* Chip8) Cycle () (error) {
             }
             break
 
+        case 0x0A:
+            // FX0A A key press is awaited, and then stored in VX.
+            fmt.Printf("FX0A A key press is awaited, and then stored in V%x.", x)
+            for {
+                // TODO: Maybe do this quicker?
+                time.Sleep(1 * time.Second) // Poll at 60hz for now
+
+                key := getKey()
+                if key > 0 {
+                    c.V[x] = key
+                    break
+                }
+            }
+            break
+
         default:
             goto NOTIMPLEMENTED
         }
 
         //FX07	Sets VX to the value of the delay timer.
-        //FX0A	A key press is awaited, and then stored in VX.
+
         //FX15	Sets the delay timer to VX.
         //FX18	Sets the sound timer to VX.
 

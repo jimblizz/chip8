@@ -41,6 +41,8 @@ func (v *Video) Init(gfxMemory *[]byte) error {
 
     v.Window.MakeContextCurrent()
 
+    v.Window.SetKeyCallback(keyPressed)
+
     // Enable vertical sync on cards that support it.
     glfw.SwapInterval(1)
 
@@ -104,4 +106,8 @@ func (v *Video) draw(pixels []byte) {
         }
     }
     v.Window.SwapBuffers()
+}
+
+func (v *Video) WaitEvents () {
+    v.WaitEvents()
 }

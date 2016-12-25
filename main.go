@@ -12,7 +12,7 @@ import (
 const (
     screenWidth     = 64
     screenHeight    = 32
-    cpuFrequency    = 10 // To original was 60hz
+    cpuFrequency    = 60 // To original was 60hz
 )
 
 var chip8Fontset = [80]byte{
@@ -122,6 +122,15 @@ func (c* Chip8) Stop () {
 
 func (c* Chip8) Run () error {
 
+    //go func () {
+    //    for {
+    //        select {
+    //        case <-inputStream:
+    //            fmt.Println("INPUT!")
+    //        }
+    //    }
+    //}()
+
     c.VideoDriver = new(Video)
     go func (c *Chip8) {
         err := c.VideoDriver.Init(&c.gfx)
@@ -169,7 +178,8 @@ func main() {
     cpu := NewCpu()
 
     //program, err := ioutil.ReadFile("/Users/jamesblizzard/Downloads/c8games/BLINKY")
-    program, err := ioutil.ReadFile("/Users/jamesblizzard/Downloads/ibm")
+    //program, err := ioutil.ReadFile("/Users/jamesblizzard/Downloads/ibm")
+    program, err := ioutil.ReadFile("/Users/jamesblizzard/Downloads/c8games/BLITZ")
     if err != nil {
         panic(err.Error())
     } else {
