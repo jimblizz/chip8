@@ -223,7 +223,18 @@ func (c* Chip8) Cycle () (error) {
 
         case 0x0006:
             // 8XY6 Shifts VX right by one. VF is set to the value of the least significant bit of VX before the shift.
-            goto NOTIMPLEMENTED
+            fmt.Printf("8XY6 Shift V%x (Vx) right by one. VF is set to the value of the least sig bit of V%x before shift", x, x)
+
+            // If the least-significant bit of Vx is 1, then VF is set to 1, otherwise 0.
+            var cf byte
+            if (c.V[x] & 0x01) == 0x01 {
+                cf = 1
+            }
+            c.V[0xF] = cf
+
+            // Then Vx is divided by 2.
+            c.V[x] = c.V[x]/2
+
             break
 
         case 0x0007:
@@ -262,7 +273,7 @@ func (c* Chip8) Cycle () (error) {
         y := uint16(c.V[(op &0x00F0)>>4])
         h := uint16(op & 0x000F) // Height
 
-        fmt.Printf("DXYH Draw a sprite %x by %x (Vx by Vy) and to height %X (H)", x, y, h)
+        fmt.Printf("DXYH Draw a sprite %x by %x (V%x by V%x) and to height %X (H)", x, (op&0x0F00)>>8, y, (op &0x00F0)>>4, h)
 
         var pixel byte
         c.V[0xF] = 0 // TODO: Why?
@@ -321,6 +332,32 @@ func (c* Chip8) Cycle () (error) {
             c.I = c.I + v
             break
 
+        case 0x29:
+            // FX29 Sets I to the location of the sprite for the character in VX. Characters 0-F (in hexadecimal) are represented by a 4x5 font.
+
+
+            goto NOTIMPLEMENTED
+            break
+
+        case 0x33:
+            // FX33 Stores the Binary-coded decimal representation of VX, with the most significant of three digits at the address in I, the middle digit at I plus 1, and the least significant digit at I plus 2. (In other words, take the decimal representation of VX, place the hundreds digit in memory at location in I, the tens digit at location I+1, and the ones digit at location I+2.)
+            // TODO: Understand this, copied implementation
+
+            // Store BCD representation of Vx in memory locations I,
+            // I+1, and I+2.
+            //
+            // The interpreter takes the decimal value of Vx, and
+            // places the hundreds digit in memory at location in I,
+            // the tens digit at location I+1, and the ones digit at
+            // location I+2.
+
+            c.Memory[c.I] = c.V[x] / 100
+            c.Memory[c.I+1] = (c.V[x] / 10) % 10
+            c.Memory[c.I+2] = (c.V[x] % 100) % 10
+
+            c.PC += 2
+            break
+
         case 0x65:
             // FX65	Fills V0 to VX with values from memory starting at address I.
             // So this is the inverse of FX55
@@ -336,7 +373,7 @@ func (c* Chip8) Cycle () (error) {
             fmt.Printf("FX0A A key press is awaited, and then stored in V%x.", x)
             for {
                 // TODO: Maybe do this quicker?
-                time.Sleep(1 * time.Second) // Poll at 60hz for now
+                time.Sleep(200 * time.Millisecond) // Poll at 60hz for now
 
                 key := getKey()
                 if key > 0 {
@@ -355,8 +392,6 @@ func (c* Chip8) Cycle () (error) {
         //FX15	Sets the delay timer to VX.
         //FX18	Sets the sound timer to VX.
 
-        //FX29	Sets I to the location of the sprite for the character in VX. Characters 0-F (in hexadecimal) are represented by a 4x5 font.
-        //FX33	Stores the Binary-coded decimal representation of VX, with the most significant of three digits at the address in I, the middle digit at I plus 1, and the least significant digit at I plus 2. (In other words, take the decimal representation of VX, place the hundreds digit in memory at location in I, the tens digit at location I+1, and the ones digit at location I+2.)
 
         break
 
